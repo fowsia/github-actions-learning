@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5fowsigithub
+        uses: actions/checkout@v5
 
       - name: Display message
         run: echo "Starting my GitHub Actions journey"
