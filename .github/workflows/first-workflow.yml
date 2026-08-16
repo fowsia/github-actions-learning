@@ -29,3 +29,18 @@ jobs:
           echo "Branch: ${{ github.ref }}"
           echo "Event: ${{ github.event_name }}"
           echo "Runner OS: ${{ runner.os }}"
+
+  build:
+    runs on: ubuntu-latest
+
+    steps:
+      -name: Display Building Application
+       run: echo "Building application"
+
+  test:
+    needs: build
+    runs on: ubuntu-latest
+
+    steps:
+      -name: Display Running tests
+       run: echo "Running tests"
