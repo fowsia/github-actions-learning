@@ -1,47 +1,35 @@
-name: My First Workflow
+name: .NET CI
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
 jobs:
-  hello:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      - name: Display message
-        run: echo "Starting my GitHub Actions journey"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
 
-      - name: Display runner information
-        run: |
-          echo "OS: $RUNNER_OS"
-          echo "Repository: $GITHUB_REPOSITORY"
-          echo "Branch: $GITHUB_REF"
+      - name: Restore dependencies
+        run: dotnet restore ActionsLearning.sln
 
-      - name: Display GitHub contexts
-        run: |
-          echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref }}"
-          echo "Event: ${{ github.event_name }}"
-          echo "Runner OS: ${{ runner.os }}"
+      - name: Build
+        run: dotnet build ActionsLearning.sln --configuration Release --no-restore
 
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Display Building Application
-        run: echo "Building application"
-
-      
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Display Running tests
-        run: echo "Running tests"
+      - name: Test
+        run: dotnet test ActionsLearning.sln --configuration Release --no-build
