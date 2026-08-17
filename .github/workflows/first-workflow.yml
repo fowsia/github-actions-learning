@@ -33,3 +33,5 @@ jobs:
 
       - name: Test
         run: dotnet test ActionsLearning.sln --configuration Release --no-build
+
+# test
