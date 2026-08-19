@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,41 +31,55 @@ jobs:
       - name: Build
         run: dotnet build ActionsLearning.sln --configuration Release --no-restore
 
+      - name: Test
+        run: >
+          dotnet test ActionsLearning.sln 
+          --configuration Release 
+          --no-build 
+          --logger "trx;LogFileName=test-results.trx" 
+          --results-directory ./TestResults
+
+      - name: Check test results files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files:"
+          find . -maxdepth 4 -type f -print
+
+      - name: Upload Test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
+
+      - name: Publish
+        run: dotnet publish ActionsLearning.Tests/ActionsLearning.Tests.csproj --configuration Release --no-build --output ./publish
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
-        with: 
-          name: build-output
-          path: ActionsLearning.Tests/bin/Release/
+        with:
+          name: dotnet-build
+          path: ./publish
 
-      
-
-  test:
-    needs: build
+  inspect-results:
+    needs: build-test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - name: Prove this is a different job
+        run: |
+          if [ -d "./TestResults" ]; then
+            echo "Unexpected: TestResults already exists"
+            exit 1
+          else
+            echo "Correct: this job does not have files from build-test"
+          fi
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+      - name: Download test results
+        uses: actions/download-artifact@v5
         with:
-          dotnet-version: '8.0.x'
+          name: test-results
+          path: ./DownloadedResults
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: ActionsLearning.Tests/bin/Release/
-
-      - name: Test
-        run: dotnet test ActionsLearning.sln --configuration Release --no-build
-
-  deploy:
-    needs: test
-    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Deploy
-        run: echo "Deploying application..."
+      - name: Inspect downloaded files
+        run: find ./DownloadedResults -type f -print
