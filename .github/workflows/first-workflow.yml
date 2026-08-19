@@ -61,11 +61,11 @@ jobs:
       - name: Test
         run: dotnet test ActionsLearning.sln --configuration Release --no-build
 
-deploy:
-  needs: test
-  if: {{ success() }}
-  runs-on: ubuntu-latest
-  
-  steps:
-    - name: Deploy
-      run: echo "Deploying application..."
+  deploy:
+    needs: test
+    if: {{ success() }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy
+        run: echo "Deploying application..."
