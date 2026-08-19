@@ -32,7 +32,19 @@ jobs:
         run: dotnet build ActionsLearning.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test ActionsLearning.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+        run: >
+          dotnet test ActionsLearning.sln 
+          --configuration Release 
+          --no-build 
+          --logger "trx;LogFileName=test-results.trx" 
+          --results-directory ./TestResults
+
+      - name: Check test results files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files:"
+          find . -maxdepth 4 -type f -print
 
       - name: Upload Test results
         uses: actions/upload-artifact@v4
