@@ -32,7 +32,13 @@ jobs:
         run: dotnet build ActionsLearning.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test ActionsLearning.sln --configuration Release --no-build
+        run: dotnet test ActionsLearning.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload Test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
 
       - name: Publish
         run: dotnet publish ActionsLearning.Tests/ActionsLearning.Tests.csproj --configuration Release --no-build --output ./publish
@@ -43,16 +49,25 @@ jobs:
           name: dotnet-build
           path: ./publish
 
-  inspect-artifact:
+  inspect-results:
     needs: build-test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download build artifact
+      - name: Prove this is a different job
+        run: |
+          if [ -d "./TestResults" ]; then
+            echo "Unexpected: TestResults already exists"
+            exit 1
+          else
+            echo "Correct: this job does not have files from build-test"
+          fi
+
+      - name: Download test results
         uses: actions/download-artifact@v5
         with:
-          name: dotnet-build
-          path: ./downloaded
+          name: test-results
+          path: ./DownloadedResults
 
-      - name: List downloaded files
-        run: ls -R ./downloaded
+      - name: Inspect downloaded files
+        run: find ./DownloadedResults -type f -print
