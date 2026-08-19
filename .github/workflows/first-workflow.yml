@@ -63,7 +63,7 @@ jobs:
 
   deploy:
     needs: test
-    if: {{ success() }}
+    if: ${{ success() }}
     runs-on: ubuntu-latest
     
     steps:
