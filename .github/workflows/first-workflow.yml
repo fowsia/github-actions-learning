@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,7 +37,26 @@ jobs:
           name: build-output
           path: ActionsLearning.Tests/bin/Release/
 
+      
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: ActionsLearning.Tests/bin/Release/
+
       - name: Test
         run: dotnet test ActionsLearning.sln --configuration Release --no-build
-
-# test
