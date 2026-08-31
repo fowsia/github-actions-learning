@@ -112,25 +112,25 @@ jobs:
       contents: read
       id-token: write
 
-  steps:
-    - name: Verify GITHUB_TOKEN read access
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        echo "Checking repository access..."
-        gh api repos/${{ github.repository }} --jq '.full_name'
+    steps:
+      - name: Verify GITHUB_TOKEN read access
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Checking repository access..."
+          gh api repos/${{ github.repository }} --jq '.full_name'
 
-    - name: Verify OIDC permission
-      run: |
-        if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
-          echo "OIDC request URL is unavailable"
-          exit 1
-        fi
+      - name: Verify OIDC permission
+        run: |
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "OIDC request URL is unavailable"
+            exit 1
+          fi
 
-        if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
-          echo "OIDC request token is unavailable"
-          exit 1
-        fi
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "OIDC request token is unavailable"
+            exit 1
+          fi
 
-        echo "OIDC token request capability is available"
-        echo "OIDC token itself will not be printed"
+          echo "OIDC token request capability is available"
+          echo "OIDC token itself will not be printed"
