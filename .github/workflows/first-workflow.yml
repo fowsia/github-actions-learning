@@ -119,6 +119,8 @@ jobs:
         run: |
           echo "Checking repository access..."
           gh api repos/${{ github.repository }} --jq '.full_name'
+          gh api users/fowsia --jq '.id'
+          gh api repos/fowsia/github-actions-learning --jq '.id'
 
       - name: Verify OIDC permission
         run: |
