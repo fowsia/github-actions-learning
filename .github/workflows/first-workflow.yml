@@ -105,8 +105,8 @@ jobs:
         run: find ./DownloadedResults -type f -print
 
   security-check:
-  needs: build-test
-  runs-on: ubuntu-latest
+    needs: build-test
+    runs-on: ubuntu-latest
 
   permissions:
     contents: read
