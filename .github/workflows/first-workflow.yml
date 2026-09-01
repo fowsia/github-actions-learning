@@ -136,3 +136,24 @@ jobs:
 
           echo "OIDC token request capability is available"
           echo "OIDC token itself will not be printed"
+
+  azure-login:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    environment: dev
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure authentication
+        run: az account show
