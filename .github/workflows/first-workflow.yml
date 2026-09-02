@@ -55,13 +55,17 @@ jobs:
           name: test-results
           path: ./TestResults
 
-      - name: Publish
-        run: dotnet publish ActionsLearning.Tests/ActionsLearning.Tests.csproj --configuration "$BUILD_CONFIGURATION" --no-build --output ./publish
+      - name: Publish web application
+        run: >
+          dotnet publish ActionsLearning.Web/ActionsLearning.Web.csproj
+          --configuration "$BUILD_CONFIGURATION"
+          --no-build
+          --output ./publish
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-build
+          name: web-app
           path: ./publish
 
       - name: Inspect configuration
@@ -119,8 +123,7 @@ jobs:
         run: |
           echo "Checking repository access..."
           gh api repos/${{ github.repository }} --jq '.full_name'
-          gh api users/fowsia --jq '.id'
-          gh api repos/fowsia/github-actions-learning --jq '.id'
+         
 
       - name: Verify OIDC permission
         run: |
@@ -137,7 +140,7 @@ jobs:
           echo "OIDC token request capability is available"
           echo "OIDC token itself will not be printed"
 
-  azure-login:
+  deploy-dev:
     needs: build-test
     runs-on: ubuntu-latest
 
@@ -148,6 +151,12 @@ jobs:
       id-token: write
 
     steps:
+      - name: Download application artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: web-app
+          path: ./publish
+
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -157,3 +166,9 @@ jobs:
 
       - name: Verify Azure authentication
         run: az account show
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: ./publish
