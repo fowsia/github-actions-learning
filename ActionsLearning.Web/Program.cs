@@ -36,6 +36,14 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
+app.MapGet("/", () => "GitHub Actions Learning App is running!");
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    application = "ActionsLearning.Web"
+}));
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
