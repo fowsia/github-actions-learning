@@ -12,8 +12,11 @@ on:
 permissions:
   contents: read
 
+env:
+  BUILD_CONFIGURATION: ${{ vars.BUILD_CONFIGURATION }}
+
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,43 +32,143 @@ jobs:
         run: dotnet restore ActionsLearning.sln
 
       - name: Build
-        run: dotnet build ActionsLearning.sln --configuration Release --no-restore
+        run: dotnet build ActionsLearning.sln --configuration "$BUILD_CONFIGURATION" --no-restore
+
+      - name: Test
+        run: >
+          dotnet test ActionsLearning.sln 
+          --configuration "$BUILD_CONFIGURATION" 
+          --no-build 
+          --logger "trx;LogFileName=test-results.trx" 
+          --results-directory ./TestResults
+
+      - name: Check test results files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files:"
+          find . -maxdepth 4 -type f -print
+
+      - name: Upload Test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
+
+      - name: Publish web application
+        run: >
+          dotnet publish ActionsLearning.Web/ActionsLearning.Web.csproj
+          --configuration "$BUILD_CONFIGURATION"
+          --no-build
+          --output ./publish
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
-        with: 
-          name: build-output
-          path: ActionsLearning.Tests/bin/Release/
+        with:
+          name: web-app
+          path: ./publish
 
-      
+      - name: Inspect configuration
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Build configuration: $BUILD_CONFIGURATION"
 
-  test:
-    needs: build
+      - name: Verify secret
+        env:
+          DEMO_TOKEN: ${{ secrets.DEMO_TOKEN }}
+        run: |
+          if [ -z "$DEMO_TOKEN" ]; then
+            echo "DEMO_TOKEN is missing"
+            exit 1
+          fi
+
+          echo "DEMO_TOKEN is available"
+
+  inspect-results:
+    needs: build-test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - name: Prove this is a different job
+        run: |
+          if [ -d "./TestResults" ]; then
+            echo "Unexpected: TestResults already exists"
+            exit 1
+          else
+            echo "Correct: this job does not have files from build-test"
+          fi
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+      - name: Download test results
+        uses: actions/download-artifact@v5
         with:
-          dotnet-version: '8.0.x'
+          name: test-results
+          path: ./DownloadedResults
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: ActionsLearning.Tests/bin/Release/
+      - name: Inspect downloaded files
+        run: find ./DownloadedResults -type f -print
 
-      - name: Test
-        run: dotnet test ActionsLearning.sln --configuration Release --no-build
-
-  deploy:
-    needs: test
-    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+  security-check:
+    needs: build-test
     runs-on: ubuntu-latest
-    
+
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
-      - name: Deploy
-        run: echo "Deploying application..."
+      - name: Verify GITHUB_TOKEN read access
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Checking repository access..."
+          gh api repos/${{ github.repository }} --jq '.full_name'
+         
+
+      - name: Verify OIDC permission
+        run: |
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "OIDC request URL is unavailable"
+            exit 1
+          fi
+
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "OIDC request token is unavailable"
+            exit 1
+          fi
+
+          echo "OIDC token request capability is available"
+          echo "OIDC token itself will not be printed"
+
+  deploy-dev:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    environment: dev
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download application artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: web-app
+          path: ./publish
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure authentication
+        run: az account show
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: ./publish

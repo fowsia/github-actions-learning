@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionsLearning.Tests", "ActionsLearning.Tests\ActionsLearning.Tests.csproj", "{894DA875-C7FD-41C3-8019-E19138614AAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionsLearning.Web", "ActionsLearning.Web\ActionsLearning.Web.csproj", "{6442DCFB-28A5-4B75-A091-BEBBDA670425}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{894DA875-C7FD-41C3-8019-E19138614AAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{894DA875-C7FD-41C3-8019-E19138614AAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{894DA875-C7FD-41C3-8019-E19138614AAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6442DCFB-28A5-4B75-A091-BEBBDA670425}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6442DCFB-28A5-4B75-A091-BEBBDA670425}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6442DCFB-28A5-4B75-A091-BEBBDA670425}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6442DCFB-28A5-4B75-A091-BEBBDA670425}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
